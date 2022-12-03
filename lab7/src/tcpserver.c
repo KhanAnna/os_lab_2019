@@ -7,16 +7,29 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define SERV_PORT 10050
-#define BUFSIZE 100
+//#define BUFSIZE 100
+//#define SERV_PORT 10050
 #define SADDR struct sockaddr
 
-int main() {
+int main(int argc, char *argv[]) {
   const size_t kSize = sizeof(struct sockaddr_in);
 
   int lfd, cfd;
   int nread;
-  char buf[BUFSIZE];
+  int buf_size = atoi(argv[1]);
+  if (buf_size <= 0)
+  {
+      printf("Size of buffer must be positive number\n");
+      exit(1);
+  }
+  char buf[buf_size];
+  
+  int serv_port = atoi(argv[2]);
+  if (serv_port <= 1024)
+  {
+      printf("Port of the server must be > 1024\n");
+      exit(1);
+  }
   struct sockaddr_in servaddr;
   struct sockaddr_in cliaddr;
 
@@ -28,7 +41,7 @@ int main() {
   memset(&servaddr, 0, kSize);
   servaddr.sin_family = AF_INET;
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  servaddr.sin_port = htons(SERV_PORT);
+  servaddr.sin_port = htons(serv_port);
 
   if (bind(lfd, (SADDR *)&servaddr, kSize) < 0) {
     perror("bind");
@@ -49,7 +62,7 @@ int main() {
     }
     printf("connection established\n");
 
-    while ((nread = read(cfd, buf, BUFSIZE)) > 0) {
+    while ((nread = read(cfd, buf, buf_size)) > 0) {
       write(1, &buf, nread);
     }
 

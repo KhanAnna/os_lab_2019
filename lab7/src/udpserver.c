@@ -8,16 +8,30 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define SERV_PORT 20001
-#define BUFSIZE 1024
+//#define SERV_PORT 20001
+//#define BUFSIZE 1024
 #define SADDR struct sockaddr
 #define SLEN sizeof(struct sockaddr_in)
 
-int main() {
+int main(int argc, char **argv) {
   int sockfd, n;
-  char mesg[BUFSIZE], ipadr[16];
   struct sockaddr_in servaddr;
   struct sockaddr_in cliaddr;
+
+  int buf_size = atoi(argv[1]);
+  if (buf_size <= 0)
+  {
+      printf("Size of buffer must be positive number\n");
+      exit(1);
+  }
+  char mesg[buf_size], ipadr[16];
+
+  int serv_port = atoi(argv[2]);
+  if (serv_port <= 1024)
+  {
+      printf("Port of the server must be > 1024\n");
+      exit(1);
+  }
 
   if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
     perror("socket problem");
@@ -27,7 +41,7 @@ int main() {
   memset(&servaddr, 0, SLEN);
   servaddr.sin_family = AF_INET;
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-  servaddr.sin_port = htons(SERV_PORT);
+  servaddr.sin_port = htons(serv_port);
 
   if (bind(sockfd, (SADDR *)&servaddr, SLEN) < 0) {
     perror("bind problem");
@@ -38,7 +52,7 @@ int main() {
   while (1) {
     unsigned int len = SLEN;
 
-    if ((n = recvfrom(sockfd, mesg, BUFSIZE, 0, (SADDR *)&cliaddr, &len)) < 0) {
+    if ((n = recvfrom(sockfd, mesg, buf_size, 0, (SADDR *)&cliaddr, &len)) < 0) {
       perror("recvfrom");
       exit(1);
     }
